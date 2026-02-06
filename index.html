@@ -6,8 +6,10 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>APEX EMERGENCY QR</title>
 
-    <!-- QRCode library (CDN) -->
+    <!-- QR -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <!-- Compresión para link corto -->
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 
     <style>
         :root {
@@ -80,6 +82,16 @@
             font-size: 12px
         }
 
+        .badge {
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(47, 230, 255, .35);
+            color: var(--neon2);
+            background: rgba(47, 230, 255, .06);
+            white-space: nowrap;
+        }
+
         .grid {
             margin-top: 18px;
             display: grid;
@@ -108,15 +120,6 @@
             justify-content: space-between;
             gap: 10px;
             border-bottom: 1px solid rgba(122, 63, 255, .22);
-        }
-
-        .badge {
-            font-size: 12px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            border: 1px solid rgba(47, 230, 255, .35);
-            color: var(--neon2);
-            background: rgba(47, 230, 255, .06);
         }
 
         .card .bd {
@@ -262,6 +265,45 @@
         .mono {
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         }
+
+        /* Viewer */
+        .viewer-title {
+            font-weight: 800;
+            font-size: 18px;
+            margin: 0 0 6px
+        }
+
+        .viewer-sub {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .pill {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(234, 240, 255, .12);
+            background: rgba(7, 10, 16, .35);
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px
+        }
+
+        .divider {
+            height: 1px;
+            background: rgba(122, 63, 255, .22);
+            margin: 12px 0
+        }
     </style>
 </head>
 
@@ -272,24 +314,28 @@
                 <div class="logo"></div>
                 <div>
                     <h1>APEX EMERGENCY QR</h1>
-                    <p>Tarjeta de emergencia para piloto + moto (estilo Apex Ride)</p>
+                    <p>QR offline (vCard) + link online (página ICE)</p>
                 </div>
             </div>
-            <div class="badge">offline / 1 archivo</div>
+            <div class="badge" id="modeBadge">CREADOR</div>
         </div>
 
-        <div class="grid">
-            <!-- FORM -->
+        <!-- CREADOR -->
+        <div id="creator" class="grid">
             <div class="card">
                 <div class="hd">
                     <div>
                         <div class="small">Datos para el QR</div>
                         <div style="font-weight:750">Piloto & Moto</div>
                     </div>
-                    <div class="badge">Genera / guarda</div>
+                    <div class="badge">vCard offline + link</div>
                 </div>
 
                 <div class="bd">
+                    <div class="sec-title">Link de la página ICE</div>
+                    <label>Base URL (donde vas a alojar esta página)</label>
+                    <input id="baseUrl" placeholder="Ej. https://tudominio.com/ice/" />
+
                     <div class="sec-title">Persona</div>
                     <div class="row">
                         <div>
@@ -361,20 +407,19 @@
                     </div>
 
                     <div class="btns">
-                        <button id="gen">Generar QR</button>
+                        <button id="gen">Generar QR (vCard + link)</button>
                         <button class="secondary" id="save">Guardar en este navegador</button>
                         <button class="secondary" id="load">Cargar guardado</button>
                         <button class="danger" id="clear">Limpiar</button>
                     </div>
 
                     <div class="hint" style="margin-top:10px">
-                        Nota: este prototipo mete los datos en el QR como JSON compacto (offline).
-                        Si lo quieres “pro”, lo pasamos a QR con link + página pública tipo “ICE”.
+                        El QR funciona sin internet (vCard).
+                        Si hay internet, el link abre una página ICE con esta misma estética.
                     </div>
                 </div>
             </div>
 
-            <!-- QR + PREVIEW -->
             <div class="qrWrap">
                 <div class="card">
                     <div class="hd">
@@ -382,7 +427,7 @@
                             <div class="small">Escanéalo con cualquier cámara</div>
                             <div style="font-weight:750">Emergency QR</div>
                         </div>
-                        <div class="badge">ICE</div>
+                        <div class="badge" id="status">SIN CONFIGURAR</div>
                     </div>
                     <div class="bd">
                         <div class="qrBox">
@@ -391,56 +436,94 @@
 
                         <div class="kv" style="margin-top:12px">
                             <div><b>Piloto</b>
-                                <div id="pv_name"><span class="small">—</span></div>
+                                <div id="pv_name"><span class="small">SIN CONFIGURAR</span></div>
                             </div>
                             <div><b>Moto</b>
                                 <div id="pv_bike"><span class="small">—</span></div>
                             </div>
-                            <div><b>Payload (preview)</b>
+                            <div><b>Link online</b>
+                                <div id="pv_link" class="small mono">—</div>
+                            </div>
+                            <div><b>Payload vCard (preview)</b>
                                 <div id="pv_payload" class="small mono">—</div>
                             </div>
                         </div>
 
                         <div class="btns" style="margin-top:12px">
                             <button class="secondary" id="download">Descargar QR (PNG)</button>
-                            <button class="secondary" id="copy">Copiar payload</button>
+                            <button class="secondary" id="copyLink">Copiar link</button>
+                            <button class="secondary" id="copyVcard">Copiar vCard</button>
                         </div>
 
                         <div class="hint" style="margin-top:10px">
-                            Tip: pega el QR en una calca en el casco, tanque o en una tarjeta en la cartera.
+                            Tip: pega el QR en una calca en el casco / tanque o en una tarjeta.
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
+        <!-- VISOR (cuando abres /#e=...) -->
+        <div id="viewer" style="display:none; margin-top:18px;">
+            <div class="card">
+                <div class="hd">
+                    <div>
+                        <div class="small">ICE</div>
+                        <div style="font-weight:750">Emergency Info</div>
+                    </div>
+                    <div class="badge">VISTA ONLINE</div>
+                </div>
+                <div class="bd">
+                    <p class="viewer-title" id="v_name">SIN DATOS</p>
+                    <p class="viewer-sub" id="v_sub">—</p>
+
+                    <div class="pills">
+                        <a class="pill" id="btnCall" href="#">📞 Llamar</a>
+                        <a class="pill" id="btnWhats" href="#">💬 WhatsApp</a>
+                        <a class="pill" id="btnMap" href="#" style="display:none;">📍 Ubicación</a>
+                        <a class="pill" id="btnCopy" href="#">📋 Copiar resumen</a>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="kv">
+                        <div><b>Tipo de sangre</b>
+                            <div id="v_blood"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Alergias</b>
+                            <div id="v_all"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Condiciones</b>
+                            <div id="v_med"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Contacto de emergencia</b>
+                            <div id="v_emg"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Moto</b>
+                            <div id="v_bike"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Placas</b>
+                            <div id="v_plate"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Póliza</b>
+                            <div id="v_policy"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Notas</b>
+                            <div id="v_notes"><span class="small">—</span></div>
+                        </div>
+                    </div>
+
+                    <div class="hint" style="margin-top:12px">
+                        Esta vista viene del link dentro del QR. El QR por sí solo ya trae los datos (vCard) para
+                        offline.
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         const $ = (id) => document.getElementById(id);
-
-        function compactPayload(obj) {
-            // Compacta claves para que el QR quede menos denso
-            // p=persona, m=moto
-            return JSON.stringify({
-                v: 1,
-                p: {
-                    n: obj.name || "",
-                    t: obj.phone || "",
-                    b: obj.blood || "",
-                    e: obj.emg || "",
-                    a: obj.allergies || "",
-                    c: obj.medical || "",
-                    x: obj.notes || ""
-                },
-                m: {
-                    d: obj.bike || "",
-                    l: obj.plate || "",
-                    k: obj.color || "",
-                    s: obj.policy || ""
-                }
-            });
-        }
 
         function readForm() {
             return {
@@ -455,34 +538,8 @@
                 plate: $("plate").value.trim(),
                 color: $("color").value.trim(),
                 policy: $("policy").value.trim(),
+                baseUrl: $("baseUrl").value.trim(),
             };
-        }
-
-        function setPreview(obj, payload) {
-            $("pv_name").innerHTML = `<span>${obj.name || "—"}</span> <span class="small">${obj.phone ? " · " + obj.phone : ""}</span>`;
-            $("pv_bike").innerHTML = `<span>${obj.bike || "—"}</span> <span class="small">${obj.plate ? " · " + obj.plate : ""}</span>`;
-            $("pv_payload").textContent = payload || "—";
-        }
-
-        function genQR(payload) {
-            const el = $("qrcode");
-            el.innerHTML = "";
-            // QRCode.js usa canvas/img; si el payload es muy largo, sube el tamaño.
-            new QRCode(el, {
-                text: payload,
-                width: 240,
-                height: 240,
-                correctLevel: QRCode.CorrectLevel.M
-            });
-        }
-
-        function persist(key, data) {
-            localStorage.setItem(key, JSON.stringify(data));
-        }
-        function restore(key) {
-            const raw = localStorage.getItem(key);
-            if (!raw) return null;
-            try { return JSON.parse(raw); } catch { return null; }
         }
 
         function fillForm(obj) {
@@ -497,10 +554,101 @@
             $("plate").value = obj.plate || "";
             $("color").value = obj.color || "";
             $("policy").value = obj.policy || "";
+            $("baseUrl").value = obj.baseUrl || defaultBaseUrl();
+        }
+
+        function defaultBaseUrl() {
+            // Base sugerida: misma ruta donde esté hospedado el index.html
+            const u = new URL(window.location.href);
+            u.hash = "";
+            u.search = "";
+            return u.toString();
+        }
+
+        function minimalObj(obj) {
+            // Claves cortas para comprimir mejor
+            return {
+                v: 1,
+                p: { n: obj.name || "", t: obj.phone || "", b: obj.blood || "", e: obj.emg || "", a: obj.allergies || "", c: obj.medical || "", x: obj.notes || "" },
+                m: { d: obj.bike || "", l: obj.plate || "", k: obj.color || "", s: obj.policy || "" }
+            };
+        }
+
+        function encodeForLink(obj) {
+            const json = JSON.stringify(minimalObj(obj));
+            return LZString.compressToEncodedURIComponent(json);
+        }
+
+        function decodeFromLink(encoded) {
+            const json = LZString.decompressFromEncodedURIComponent(encoded);
+            if (!json) return null;
+            try { return JSON.parse(json); } catch { return null; }
+        }
+
+        function buildOnlineLink(obj) {
+            const base = (obj.baseUrl || defaultBaseUrl()).trim();
+            const encoded = encodeForLink(obj);
+            // Datos en hash (#e=) para que sea estático y fácil de hostear
+            return `${base.replace(/#.*$/, "").replace(/\?.*$/, "")}#e=${encoded}`;
+        }
+
+        function buildVCard(obj, link) {
+            const fn = (obj.name || "SIN CONFIGURAR").replace(/\n/g, " ");
+            const tel = (obj.phone || "").replace(/\n/g, " ");
+
+            // Nota compacta (para no inflar el QR)
+            const parts = [
+                "ICE",
+                obj.blood ? `Sangre:${obj.blood}` : "",
+                obj.allergies ? `Alergias:${obj.allergies}` : "",
+                obj.medical ? `Cond:${obj.medical}` : "",
+                obj.emg ? `Contacto:${obj.emg}` : "",
+                obj.bike ? `Moto:${obj.bike}` : "",
+                obj.plate ? `Placas:${obj.plate}` : "",
+                obj.color ? `Color:${obj.color}` : "",
+                obj.policy ? `Poliza:${obj.policy}` : "",
+                obj.notes ? `Notas:${obj.notes}` : "",
+                link ? `Link:${link}` : ""
+            ].filter(Boolean);
+
+            // vCard 3.0 compatible
+            let v = "";
+            v += "BEGIN:VCARD\n";
+            v += "VERSION:3.0\n";
+            v += `FN:${fn}\n`;
+            if (tel) v += `TEL;TYPE=CELL:${tel}\n`;
+            v += `NOTE:${parts.join(" | ")}\n`;
+            v += "END:VCARD";
+            return v;
+        }
+
+        function genQR(text) {
+            const el = $("qrcode");
+            el.innerHTML = "";
+            new QRCode(el, {
+                text,
+                width: 240,
+                height: 240,
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        function setPreview(obj, link, vcard) {
+            $("pv_name").innerHTML = obj.name
+                ? `<span>${obj.name}</span> <span class="small">${obj.phone ? " · " + obj.phone : ""}</span>`
+                : `<span class="small">SIN CONFIGURAR</span>`;
+            $("pv_bike").innerHTML = obj.bike
+                ? `<span>${obj.bike}</span> <span class="small">${obj.plate ? " · " + obj.plate : ""}</span>`
+                : `<span class="small">—</span>`;
+
+            $("pv_link").textContent = link || "—";
+            $("pv_payload").textContent = vcard || "—";
+
+            const ready = !!(obj.name || obj.phone || obj.emg || obj.bike || obj.plate);
+            $("status").textContent = ready ? "LISTO" : "SIN CONFIGURAR";
         }
 
         function downloadQR() {
-            // QRCode.js suele crear <img> o <canvas> dentro del contenedor
             const el = $("qrcode");
             const img = el.querySelector("img");
             const canvas = el.querySelector("canvas");
@@ -509,10 +657,7 @@
             if (img && img.src) dataURL = img.src;
             if (!dataURL && canvas) dataURL = canvas.toDataURL("image/png");
 
-            if (!dataURL) {
-                alert("No se encontró imagen/canvas del QR.");
-                return;
-            }
+            if (!dataURL) { alert("No se encontró imagen/canvas del QR."); return; }
 
             const a = document.createElement("a");
             a.href = dataURL;
@@ -522,49 +667,135 @@
             a.remove();
         }
 
-        function copyPayload() {
-            const text = $("pv_payload").textContent || "";
+        function persist(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+        function restore(key) {
+            const raw = localStorage.getItem(key);
+            if (!raw) return null;
+            try { return JSON.parse(raw); } catch { return null; }
+        }
+
+        function demoQR() {
+            const demoText =
+                "APEX EMERGENCY QR\n" +
+                "SIN CONFIGURAR\n" +
+                "Tip: llena tus datos y presiona 'Generar QR'.\n" +
+                "ICE: In Case of Emergency";
+            genQR(demoText);
+            $("pv_name").innerHTML = `<span class="small">SIN CONFIGURAR</span>`;
+            $("pv_bike").innerHTML = `<span class="small">—</span>`;
+            $("pv_link").textContent = "—";
+            $("pv_payload").textContent = demoText;
+            $("status").textContent = "SIN CONFIGURAR";
+        }
+
+        function copyText(text) {
             if (!text || text === "—") return;
-            navigator.clipboard.writeText(text).then(() => {
-                // ok
-            }).catch(() => { });
+            navigator.clipboard.writeText(text).catch(() => { });
+        }
+
+        // Viewer render
+        function renderViewer(data) {
+            const p = data.p || {};
+            const m = data.m || {};
+            const name = p.n || "SIN DATOS";
+            const phone = p.t || "";
+            const sub = [phone, (m.d || ""), (m.l || "")].filter(Boolean).join(" · ");
+
+            $("v_name").textContent = name;
+            $("v_sub").textContent = sub || "—";
+            $("v_blood").textContent = p.b || "—";
+            $("v_all").textContent = p.a || "—";
+            $("v_med").textContent = p.c || "—";
+            $("v_emg").textContent = p.e || "—";
+            $("v_bike").textContent = m.d || "—";
+            $("v_plate").textContent = m.l || "—";
+            $("v_policy").textContent = m.s || "—";
+            $("v_notes").textContent = p.x || "—";
+
+            // Botones
+            $("btnCall").href = phone ? `tel:${phone}` : "#";
+            $("btnWhats").href = phone ? `https://wa.me/${phone.replace(/[^\d]/g, "")}` : "#";
+
+            const summary =
+                `ICE | ${name}\n` +
+                (phone ? `Tel: ${phone}\n` : "") +
+                (p.b ? `Sangre: ${p.b}\n` : "") +
+                (p.a ? `Alergias: ${p.a}\n` : "") +
+                (p.c ? `Condiciones: ${p.c}\n` : "") +
+                (p.e ? `Contacto: ${p.e}\n` : "") +
+                (m.d ? `Moto: ${m.d}\n` : "") +
+                (m.l ? `Placas: ${m.l}\n` : "") +
+                (m.s ? `Póliza: ${m.s}\n` : "") +
+                (p.x ? `Notas: ${p.x}\n` : "");
+
+            $("btnCopy").onclick = (e) => { e.preventDefault(); copyText(summary); };
+
+            // Mostrar viewer
+            $("creator").style.display = "none";
+            $("viewer").style.display = "block";
+            $("modeBadge").textContent = "VISTA ICE";
+        }
+
+        // Init: decide mode
+        function init() {
+            // set baseUrl default
+            $("baseUrl").value = defaultBaseUrl();
+
+            // Si viene con #e=..., mostrar viewer
+            const hash = window.location.hash || "";
+            const match = hash.match(/#e=([^&]+)/);
+            if (match && match[1]) {
+                const decoded = decodeFromLink(match[1]);
+                if (decoded) {
+                    renderViewer(decoded);
+                    return;
+                }
+            }
+
+            // Creador normal
+            $("creator").style.display = "grid";
+            $("viewer").style.display = "none";
+            $("modeBadge").textContent = "CREADOR";
+            demoQR();
         }
 
         // Actions
         $("gen").addEventListener("click", () => {
             const obj = readForm();
-            const payload = compactPayload(obj);
-            genQR(payload);
-            setPreview(obj, payload);
+            const link = buildOnlineLink(obj);
+            const vcard = buildVCard(obj, link);
+
+            genQR(vcard);
+            setPreview(obj, link, vcard);
+
+            // Guardado rápido opcional
+            persist("apex_emergency_profile_v2", obj);
         });
 
         $("save").addEventListener("click", () => {
-            const obj = readForm();
-            persist("apex_emergency_profile_v1", obj);
+            persist("apex_emergency_profile_v2", readForm());
         });
 
         $("load").addEventListener("click", () => {
-            const obj = restore("apex_emergency_profile_v1");
+            const obj = restore("apex_emergency_profile_v2");
             if (!obj) return;
             fillForm(obj);
-            const payload = compactPayload(obj);
-            genQR(payload);
-            setPreview(obj, payload);
+            const link = buildOnlineLink(obj);
+            const vcard = buildVCard(obj, link);
+            genQR(vcard);
+            setPreview(obj, link, vcard);
         });
 
         $("clear").addEventListener("click", () => {
-            fillForm({});
-            $("qrcode").innerHTML = "";
-            setPreview({}, "");
+            fillForm({ baseUrl: defaultBaseUrl() });
+            demoQR();
         });
 
         $("download").addEventListener("click", downloadQR);
-        $("copy").addEventListener("click", copyPayload);
+        $("copyLink").addEventListener("click", () => copyText($("pv_link").textContent));
+        $("copyVcard").addEventListener("click", () => copyText($("pv_payload").textContent));
 
-        // Auto-generate empty QR placeholder
-        const initPayload = compactPayload(readForm());
-        genQR(initPayload);
-        setPreview(readForm(), initPayload);
+        init();
     </script>
 </body>
 
