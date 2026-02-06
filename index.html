@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <!-- Compresión para link corto -->
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+    <!-- Exportar sticker a PNG -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
     <style>
         :root {
@@ -226,10 +228,50 @@
             min-height: 320px;
         }
 
+        /* Sticker imprimible */
+        .sticker {
+            display: grid;
+            place-items: center;
+            gap: 10px;
+            padding: 12px 12px 14px;
+            border-radius: 18px;
+            background: #fff;
+            /* blanco para impresión */
+            color: #000;
+            min-width: 280px;
+        }
+
         #qrcode {
             padding: 10px;
             background: #fff;
             border-radius: 16px
+        }
+
+        .stickerLabel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 950;
+            letter-spacing: 2px;
+            font-size: 18px;
+            text-transform: uppercase;
+        }
+
+        .stickerIcon {
+            font-size: 18px;
+            line-height: 1
+        }
+
+        .stickerName {
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+        }
+
+        .stickerSub {
+            font-size: 12px;
+            opacity: .75
         }
 
         .hint {
@@ -253,10 +295,6 @@
             font-weight: 600
         }
 
-        .kv span {
-            font-size: 14px
-        }
-
         .small {
             font-size: 12px;
             color: var(--muted)
@@ -266,7 +304,7 @@
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         }
 
-        /* Viewer */
+        /* Viewer (modo online) */
         .viewer-title {
             font-weight: 800;
             font-size: 18px;
@@ -304,6 +342,46 @@
             background: rgba(122, 63, 255, .22);
             margin: 12px 0
         }
+
+        /* Impresión: imprime el sticker centrado */
+        @media print {
+            body {
+                background: #fff !important;
+            }
+
+            .topbar,
+            #creator .card:first-child,
+            .kv,
+            .btns,
+            .hint,
+            .badge,
+            .pills,
+            .divider,
+            #viewer {
+                display: none !important;
+            }
+
+            .grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .qrWrap .card {
+                border: none !important;
+                box-shadow: none !important;
+                background: #fff !important;
+            }
+
+            .qrBox {
+                border: none !important;
+                background: #fff !important;
+                min-height: auto !important;
+                padding: 0 !important;
+            }
+
+            .sticker {
+                margin: 0 auto !important;
+            }
+        }
     </style>
 </head>
 
@@ -314,7 +392,7 @@
                 <div class="logo"></div>
                 <div>
                     <h1>APEX EMERGENCY QR</h1>
-                    <p>QR offline (vCard) + link online (página ICE)</p>
+                    <p>QR offline (vCard) + link online (página Emergencia)</p>
                 </div>
             </div>
             <div class="badge" id="modeBadge">CREADOR</div>
@@ -332,19 +410,30 @@
                 </div>
 
                 <div class="bd">
-                    <div class="sec-title">Link de la página ICE</div>
+                    <div class="sec-title">Link de la página de emergencia</div>
                     <label>Base URL (donde vas a alojar esta página)</label>
                     <input id="baseUrl" placeholder="Ej. https://tudominio.com/ice/" />
 
                     <div class="sec-title">Persona</div>
                     <div class="row">
                         <div>
+                            <label>Alias (recomendado)</label>
+                            <input id="alias" placeholder="Ej. AREIVAN" />
+                        </div>
+                        <div>
                             <label>Nombre</label>
                             <input id="name" placeholder="Ej. Areivan Angeles" />
                         </div>
+                    </div>
+
+                    <div class="row">
                         <div>
                             <label>Teléfono</label>
                             <input id="phone" placeholder="Ej. +52 55 ..." />
+                        </div>
+                        <div>
+                            <label>Contacto de emergencia</label>
+                            <input id="emg" placeholder="Nombre + teléfono" />
                         </div>
                     </div>
 
@@ -364,19 +453,19 @@
                             </select>
                         </div>
                         <div>
-                            <label>Contacto de emergencia</label>
-                            <input id="emg" placeholder="Nombre + teléfono" />
+                            <label>Alergias</label>
+                            <input id="allergies" placeholder="Ej. penicilina, mariscos" />
                         </div>
                     </div>
 
                     <div class="row">
                         <div>
-                            <label>Alergias</label>
-                            <input id="allergies" placeholder="Ej. penicilina, mariscos" />
-                        </div>
-                        <div>
                             <label>Condiciones médicas</label>
                             <input id="medical" placeholder="Ej. asma, diabetes" />
+                        </div>
+                        <div>
+                            <label>Póliza / aseguradora</label>
+                            <input id="policy" placeholder="Ej. Qualitas / #123456" />
                         </div>
                     </div>
 
@@ -401,8 +490,8 @@
                             <input id="color" placeholder="Ej. negro / morado" />
                         </div>
                         <div>
-                            <label>Póliza / aseguradora</label>
-                            <input id="policy" placeholder="Ej. Qualitas / #123456" />
+                            <label>Extra (opcional)</label>
+                            <input id="extra" placeholder="Ej. VIN, seguro, etc. (si lo necesitas)" />
                         </div>
                     </div>
 
@@ -414,8 +503,8 @@
                     </div>
 
                     <div class="hint" style="margin-top:10px">
-                        El QR funciona sin internet (vCard).
-                        Si hay internet, el link abre una página ICE con esta misma estética.
+                        El QR funciona sin internet (vCard). Si hay internet, el link abre la página de emergencia con
+                        esta misma estética.
                     </div>
                 </div>
             </div>
@@ -424,14 +513,24 @@
                 <div class="card">
                     <div class="hd">
                         <div>
-                            <div class="small">Escanéalo con cualquier cámara</div>
+                            <div class="small">Sticker imprimible</div>
                             <div style="font-weight:750">Emergency QR</div>
                         </div>
                         <div class="badge" id="status">SIN CONFIGURAR</div>
                     </div>
                     <div class="bd">
                         <div class="qrBox">
-                            <div id="qrcode"></div>
+                            <div class="sticker" id="sticker">
+                                <div id="qrcode"></div>
+
+                                <div class="stickerLabel">
+                                    <span class="stickerIcon">⚠️</span>
+                                    <span>EMERGENCIA</span>
+                                </div>
+
+                                <div class="stickerName" id="stickerName">PILOTO: —</div>
+                                <div class="stickerSub">Escanea para ver datos</div>
+                            </div>
                         </div>
 
                         <div class="kv" style="margin-top:12px">
@@ -444,19 +543,20 @@
                             <div><b>Link online</b>
                                 <div id="pv_link" class="small mono">—</div>
                             </div>
-                            <div><b>Payload vCard (preview)</b>
+                            <div><b>vCard (preview)</b>
                                 <div id="pv_payload" class="small mono">—</div>
                             </div>
                         </div>
 
                         <div class="btns" style="margin-top:12px">
-                            <button class="secondary" id="download">Descargar QR (PNG)</button>
+                            <button class="secondary" id="download">Descargar sticker (PNG)</button>
+                            <button class="secondary" id="print">Imprimir sticker</button>
                             <button class="secondary" id="copyLink">Copiar link</button>
                             <button class="secondary" id="copyVcard">Copiar vCard</button>
                         </div>
 
                         <div class="hint" style="margin-top:10px">
-                            Tip: pega el QR en una calca en el casco / tanque o en una tarjeta.
+                            Recomendación: imprime y plastifica o haz calca para casco/tanque.
                         </div>
                     </div>
                 </div>
@@ -468,7 +568,7 @@
             <div class="card">
                 <div class="hd">
                     <div>
-                        <div class="small">ICE</div>
+                        <div class="small">EMERGENCIA</div>
                         <div style="font-weight:750">Emergency Info</div>
                     </div>
                     <div class="badge">VISTA ONLINE</div>
@@ -480,7 +580,6 @@
                     <div class="pills">
                         <a class="pill" id="btnCall" href="#">📞 Llamar</a>
                         <a class="pill" id="btnWhats" href="#">💬 WhatsApp</a>
-                        <a class="pill" id="btnMap" href="#" style="display:none;">📍 Ubicación</a>
                         <a class="pill" id="btnCopy" href="#">📋 Copiar resumen</a>
                     </div>
 
@@ -514,7 +613,7 @@
                     </div>
 
                     <div class="hint" style="margin-top:12px">
-                        Esta vista viene del link dentro del QR. El QR por sí solo ya trae los datos (vCard) para
+                        Esta vista viene del link dentro del QR. El QR por sí solo ya trae los datos (vCard) para uso
                         offline.
                     </div>
                 </div>
@@ -525,12 +624,21 @@
     <script>
         const $ = (id) => document.getElementById(id);
 
+        function defaultBaseUrl() {
+            const u = new URL(window.location.href);
+            u.hash = "";
+            u.search = "";
+            return u.toString();
+        }
+
         function readForm() {
             return {
+                baseUrl: $("baseUrl").value.trim(),
+                alias: $("alias").value.trim(),
                 name: $("name").value.trim(),
                 phone: $("phone").value.trim(),
-                blood: $("blood").value.trim(),
                 emg: $("emg").value.trim(),
+                blood: $("blood").value.trim(),
                 allergies: $("allergies").value.trim(),
                 medical: $("medical").value.trim(),
                 notes: $("notes").value.trim(),
@@ -538,15 +646,17 @@
                 plate: $("plate").value.trim(),
                 color: $("color").value.trim(),
                 policy: $("policy").value.trim(),
-                baseUrl: $("baseUrl").value.trim(),
+                extra: $("extra").value.trim(),
             };
         }
 
         function fillForm(obj) {
+            $("baseUrl").value = obj.baseUrl || defaultBaseUrl();
+            $("alias").value = obj.alias || "";
             $("name").value = obj.name || "";
             $("phone").value = obj.phone || "";
-            $("blood").value = obj.blood || "";
             $("emg").value = obj.emg || "";
+            $("blood").value = obj.blood || "";
             $("allergies").value = obj.allergies || "";
             $("medical").value = obj.medical || "";
             $("notes").value = obj.notes || "";
@@ -554,23 +664,30 @@
             $("plate").value = obj.plate || "";
             $("color").value = obj.color || "";
             $("policy").value = obj.policy || "";
-            $("baseUrl").value = obj.baseUrl || defaultBaseUrl();
-        }
-
-        function defaultBaseUrl() {
-            // Base sugerida: misma ruta donde esté hospedado el index.html
-            const u = new URL(window.location.href);
-            u.hash = "";
-            u.search = "";
-            return u.toString();
+            $("extra").value = obj.extra || "";
         }
 
         function minimalObj(obj) {
-            // Claves cortas para comprimir mejor
+            // Claves cortas para comprimir
             return {
                 v: 1,
-                p: { n: obj.name || "", t: obj.phone || "", b: obj.blood || "", e: obj.emg || "", a: obj.allergies || "", c: obj.medical || "", x: obj.notes || "" },
-                m: { d: obj.bike || "", l: obj.plate || "", k: obj.color || "", s: obj.policy || "" }
+                p: {
+                    u: obj.alias || "", // alias
+                    n: obj.name || "",
+                    t: obj.phone || "",
+                    b: obj.blood || "",
+                    e: obj.emg || "",
+                    a: obj.allergies || "",
+                    c: obj.medical || "",
+                    x: obj.notes || ""
+                },
+                m: {
+                    d: obj.bike || "",
+                    l: obj.plate || "",
+                    k: obj.color || "",
+                    s: obj.policy || "",
+                    z: obj.extra || ""
+                }
             };
         }
 
@@ -588,15 +705,15 @@
         function buildOnlineLink(obj) {
             const base = (obj.baseUrl || defaultBaseUrl()).trim();
             const encoded = encodeForLink(obj);
-            // Datos en hash (#e=) para que sea estático y fácil de hostear
             return `${base.replace(/#.*$/, "").replace(/\?.*$/, "")}#e=${encoded}`;
         }
 
         function buildVCard(obj, link) {
-            const fn = (obj.name || "SIN CONFIGURAR").replace(/\n/g, " ");
+            // Preferir alias si existe
+            const fnValue = (obj.alias || obj.name || "SIN CONFIGURAR").replace(/\n/g, " ");
             const tel = (obj.phone || "").replace(/\n/g, " ");
 
-            // Nota compacta (para no inflar el QR)
+            // Nota compacta para no inflar el QR
             const parts = [
                 "ICE",
                 obj.blood ? `Sangre:${obj.blood}` : "",
@@ -607,6 +724,7 @@
                 obj.plate ? `Placas:${obj.plate}` : "",
                 obj.color ? `Color:${obj.color}` : "",
                 obj.policy ? `Poliza:${obj.policy}` : "",
+                obj.extra ? `Extra:${obj.extra}` : "",
                 obj.notes ? `Notas:${obj.notes}` : "",
                 link ? `Link:${link}` : ""
             ].filter(Boolean);
@@ -615,7 +733,7 @@
             let v = "";
             v += "BEGIN:VCARD\n";
             v += "VERSION:3.0\n";
-            v += `FN:${fn}\n`;
+            v += `FN:${fnValue}\n`;
             if (tel) v += `TEL;TYPE=CELL:${tel}\n`;
             v += `NOTE:${parts.join(" | ")}\n`;
             v += "END:VCARD";
@@ -633,10 +751,20 @@
             });
         }
 
+        function updateStickerName(obj) {
+            const who = (obj.alias || obj.name || "").trim();
+            const label = who ? `PILOTO: ${who}` : "PILOTO: —";
+            const el = $("stickerName");
+            if (el) el.textContent = label;
+        }
+
         function setPreview(obj, link, vcard) {
-            $("pv_name").innerHTML = obj.name
-                ? `<span>${obj.name}</span> <span class="small">${obj.phone ? " · " + obj.phone : ""}</span>`
+            const who = (obj.alias || obj.name || "").trim();
+
+            $("pv_name").innerHTML = who
+                ? `<span>${who}</span> <span class="small">${obj.phone ? " · " + obj.phone : ""}</span>`
                 : `<span class="small">SIN CONFIGURAR</span>`;
+
             $("pv_bike").innerHTML = obj.bike
                 ? `<span>${obj.bike}</span> <span class="small">${obj.plate ? " · " + obj.plate : ""}</span>`
                 : `<span class="small">—</span>`;
@@ -644,24 +772,23 @@
             $("pv_link").textContent = link || "—";
             $("pv_payload").textContent = vcard || "—";
 
-            const ready = !!(obj.name || obj.phone || obj.emg || obj.bike || obj.plate);
+            const ready = !!(who || obj.phone || obj.emg || obj.bike || obj.plate);
             $("status").textContent = ready ? "LISTO" : "SIN CONFIGURAR";
         }
 
-        function downloadQR() {
-            const el = $("qrcode");
-            const img = el.querySelector("img");
-            const canvas = el.querySelector("canvas");
-            let dataURL = null;
+        async function downloadStickerPNG() {
+            const sticker = $("sticker");
+            if (!sticker) { alert("No se encontró el sticker."); return; }
 
-            if (img && img.src) dataURL = img.src;
-            if (!dataURL && canvas) dataURL = canvas.toDataURL("image/png");
+            const canvas = await html2canvas(sticker, {
+                backgroundColor: "#ffffff",
+                scale: 3
+            });
 
-            if (!dataURL) { alert("No se encontró imagen/canvas del QR."); return; }
-
+            const dataURL = canvas.toDataURL("image/png");
             const a = document.createElement("a");
             a.href = dataURL;
-            a.download = "apex_emergency_qr.png";
+            a.download = "apex_emergencia_sticker.png";
             document.body.appendChild(a);
             a.click();
             a.remove();
@@ -672,6 +799,11 @@
             const raw = localStorage.getItem(key);
             if (!raw) return null;
             try { return JSON.parse(raw); } catch { return null; }
+        }
+
+        function copyText(text) {
+            if (!text || text === "—") return;
+            navigator.clipboard.writeText(text).catch(() => { });
         }
 
         function demoQR() {
@@ -686,23 +818,25 @@
             $("pv_link").textContent = "—";
             $("pv_payload").textContent = demoText;
             $("status").textContent = "SIN CONFIGURAR";
+            updateStickerName({ alias: "", name: "" });
         }
 
-        function copyText(text) {
-            if (!text || text === "—") return;
-            navigator.clipboard.writeText(text).catch(() => { });
-        }
-
-        // Viewer render
+        // Viewer render (modo online)
         function renderViewer(data) {
             const p = data.p || {};
             const m = data.m || {};
-            const name = p.n || "SIN DATOS";
-            const phone = p.t || "";
-            const sub = [phone, (m.d || ""), (m.l || "")].filter(Boolean).join(" · ");
+            const who = (p.u || p.n || "SIN DATOS").trim();
+            const phone = (p.t || "").trim();
 
-            $("v_name").textContent = name;
+            const sub = [
+                phone || "",
+                m.d || "",
+                m.l || ""
+            ].filter(Boolean).join(" · ");
+
+            $("v_name").textContent = who || "SIN DATOS";
             $("v_sub").textContent = sub || "—";
+
             $("v_blood").textContent = p.b || "—";
             $("v_all").textContent = p.a || "—";
             $("v_med").textContent = p.c || "—";
@@ -712,12 +846,11 @@
             $("v_policy").textContent = m.s || "—";
             $("v_notes").textContent = p.x || "—";
 
-            // Botones
             $("btnCall").href = phone ? `tel:${phone}` : "#";
             $("btnWhats").href = phone ? `https://wa.me/${phone.replace(/[^\d]/g, "")}` : "#";
 
             const summary =
-                `ICE | ${name}\n` +
+                `EMERGENCIA | ${who}\n` +
                 (phone ? `Tel: ${phone}\n` : "") +
                 (p.b ? `Sangre: ${p.b}\n` : "") +
                 (p.a ? `Alergias: ${p.a}\n` : "") +
@@ -730,18 +863,14 @@
 
             $("btnCopy").onclick = (e) => { e.preventDefault(); copyText(summary); };
 
-            // Mostrar viewer
             $("creator").style.display = "none";
             $("viewer").style.display = "block";
-            $("modeBadge").textContent = "VISTA ICE";
+            $("modeBadge").textContent = "VISTA EMERGENCIA";
         }
 
-        // Init: decide mode
         function init() {
-            // set baseUrl default
             $("baseUrl").value = defaultBaseUrl();
 
-            // Si viene con #e=..., mostrar viewer
             const hash = window.location.hash || "";
             const match = hash.match(/#e=([^&]+)/);
             if (match && match[1]) {
@@ -752,11 +881,21 @@
                 }
             }
 
-            // Creador normal
             $("creator").style.display = "grid";
             $("viewer").style.display = "none";
             $("modeBadge").textContent = "CREADOR";
             demoQR();
+
+            // auto-cargar si hay perfil guardado
+            const obj = restore("apex_emergency_profile_v3");
+            if (obj) {
+                fillForm({ ...obj, baseUrl: obj.baseUrl || defaultBaseUrl() });
+                const link = buildOnlineLink(readForm());
+                const vcard = buildVCard(readForm(), link);
+                genQR(vcard);
+                setPreview(readForm(), link, vcard);
+                updateStickerName(readForm());
+            }
         }
 
         // Actions
@@ -767,31 +906,35 @@
 
             genQR(vcard);
             setPreview(obj, link, vcard);
+            updateStickerName(obj);
 
-            // Guardado rápido opcional
-            persist("apex_emergency_profile_v2", obj);
+            persist("apex_emergency_profile_v3", obj);
         });
 
         $("save").addEventListener("click", () => {
-            persist("apex_emergency_profile_v2", readForm());
+            persist("apex_emergency_profile_v3", readForm());
         });
 
         $("load").addEventListener("click", () => {
-            const obj = restore("apex_emergency_profile_v2");
+            const obj = restore("apex_emergency_profile_v3");
             if (!obj) return;
-            fillForm(obj);
-            const link = buildOnlineLink(obj);
-            const vcard = buildVCard(obj, link);
+            fillForm({ ...obj, baseUrl: obj.baseUrl || defaultBaseUrl() });
+            const fresh = readForm();
+            const link = buildOnlineLink(fresh);
+            const vcard = buildVCard(fresh, link);
             genQR(vcard);
-            setPreview(obj, link, vcard);
+            setPreview(fresh, link, vcard);
+            updateStickerName(fresh);
         });
 
         $("clear").addEventListener("click", () => {
             fillForm({ baseUrl: defaultBaseUrl() });
             demoQR();
+            persist("apex_emergency_profile_v3", readForm());
         });
 
-        $("download").addEventListener("click", downloadQR);
+        $("download").addEventListener("click", downloadStickerPNG);
+        $("print").addEventListener("click", () => window.print());
         $("copyLink").addEventListener("click", () => copyText($("pv_link").textContent));
         $("copyVcard").addEventListener("click", () => copyText($("pv_payload").textContent));
 
