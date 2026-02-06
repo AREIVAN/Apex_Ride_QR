@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>APEX EMERGENCY QR</title>
+
+    <!-- QRCode library (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #070A10;
+            --panel: #0B1020;
+            --panel2: #0C142A;
+            --stroke: rgba(122, 63, 255, .55);
+            --neon: #7A3FFF;
+            --neon2: #2FE6FF;
+            --hot: #FF2E88;
+            --text: #EAF0FF;
+            --muted: rgba(234, 240, 255, .65);
+            --r: 18px;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+            background: radial-gradient(1200px 600px at 20% 0%, rgba(122, 63, 255, .18), transparent 60%),
+                radial-gradient(900px 600px at 80% 10%, rgba(47, 230, 255, .10), transparent 55%),
+                var(--bg);
+            color: var(--text);
+        }
+
+        .wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 22px
+        }
+
+        .topbar {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border: 1px solid rgba(122, 63, 255, .35);
+            background: linear-gradient(180deg, rgba(11, 16, 32, .9), rgba(11, 16, 32, .6));
+            border-radius: calc(var(--r) + 4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(122, 63, 255, .95), rgba(47, 230, 255, .85));
+            box-shadow: 0 0 0 1px rgba(234, 240, 255, .12), 0 10px 25px rgba(122, 63, 255, .25);
+        }
+
+        .brand h1 {
+            font-size: 16px;
+            margin: 0;
+            letter-spacing: .8px
+        }
+
+        .brand p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .grid {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: 1.15fr .85fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 920px) {
+            .grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .card {
+            border: 1px solid rgba(122, 63, 255, .35);
+            background: linear-gradient(180deg, rgba(12, 20, 42, .75), rgba(11, 16, 32, .6));
+            border-radius: calc(var(--r) + 6px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
+            overflow: hidden;
+        }
+
+        .card .hd {
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            border-bottom: 1px solid rgba(122, 63, 255, .22);
+        }
+
+        .badge {
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(47, 230, 255, .35);
+            color: var(--neon2);
+            background: rgba(47, 230, 255, .06);
+        }
+
+        .card .bd {
+            padding: 16px
+        }
+
+        .sec-title {
+            margin: 10px 0 8px;
+            font-size: 12px;
+            letter-spacing: 1px;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media (max-width: 520px) {
+            .row {
+                grid-template-columns: 1fr
+            }
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin: 0 0 6px
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(234, 240, 255, .10);
+            background: rgba(7, 10, 16, .55);
+            color: var(--text);
+            outline: none;
+        }
+
+        textarea {
+            min-height: 86px;
+            resize: vertical
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: rgba(47, 230, 255, .45);
+            box-shadow: 0 0 0 3px rgba(47, 230, 255, .10);
+        }
+
+        .btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px
+        }
+
+        button {
+            cursor: pointer;
+            border: 1px solid rgba(122, 63, 255, .45);
+            background: linear-gradient(135deg, rgba(122, 63, 255, .92), rgba(47, 230, 255, .65));
+            color: var(--text);
+            padding: 11px 14px;
+            border-radius: 16px;
+            font-weight: 650;
+            letter-spacing: .2px;
+            box-shadow: 0 12px 28px rgba(122, 63, 255, .18);
+        }
+
+        button.secondary {
+            background: rgba(234, 240, 255, .04);
+            border: 1px solid rgba(234, 240, 255, .12);
+            box-shadow: none;
+            color: var(--text);
+        }
+
+        button.danger {
+            background: rgba(255, 46, 136, .12);
+            border: 1px solid rgba(255, 46, 136, .35);
+            box-shadow: none;
+            color: var(--hot);
+        }
+
+        .qrWrap {
+            display: grid;
+            gap: 12px;
+        }
+
+        .qrBox {
+            padding: 16px;
+            display: grid;
+            place-items: center;
+            border-radius: calc(var(--r) + 6px);
+            border: 1px solid rgba(47, 230, 255, .28);
+            background: radial-gradient(500px 300px at 50% 0%, rgba(47, 230, 255, .10), transparent 55%),
+                rgba(7, 10, 16, .35);
+            min-height: 320px;
+        }
+
+        #qrcode {
+            padding: 10px;
+            background: #fff;
+            border-radius: 16px
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.35
+        }
+
+        .kv {
+            display: grid;
+            gap: 10px;
+            padding: 14px 16px;
+            border-radius: calc(var(--r) + 6px);
+            border: 1px solid rgba(122, 63, 255, .22);
+            background: rgba(7, 10, 16, .35);
+        }
+
+        .kv b {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600
+        }
+
+        .kv span {
+            font-size: 14px
+        }
+
+        .small {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="topbar">
+            <div class="brand">
+                <div class="logo"></div>
+                <div>
+                    <h1>APEX EMERGENCY QR</h1>
+                    <p>Tarjeta de emergencia para piloto + moto (estilo Apex Ride)</p>
+                </div>
+            </div>
+            <div class="badge">offline / 1 archivo</div>
+        </div>
+
+        <div class="grid">
+            <!-- FORM -->
+            <div class="card">
+                <div class="hd">
+                    <div>
+                        <div class="small">Datos para el QR</div>
+                        <div style="font-weight:750">Piloto & Moto</div>
+                    </div>
+                    <div class="badge">Genera / guarda</div>
+                </div>
+
+                <div class="bd">
+                    <div class="sec-title">Persona</div>
+                    <div class="row">
+                        <div>
+                            <label>Nombre</label>
+                            <input id="name" placeholder="Ej. Areivan Angeles" />
+                        </div>
+                        <div>
+                            <label>Teléfono</label>
+                            <input id="phone" placeholder="Ej. +52 55 ..." />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div>
+                            <label>Tipo de sangre</label>
+                            <select id="blood">
+                                <option value="">(opcional)</option>
+                                <option>O+</option>
+                                <option>O-</option>
+                                <option>A+</option>
+                                <option>A-</option>
+                                <option>B+</option>
+                                <option>B-</option>
+                                <option>AB+</option>
+                                <option>AB-</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Contacto de emergencia</label>
+                            <input id="emg" placeholder="Nombre + teléfono" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div>
+                            <label>Alergias</label>
+                            <input id="allergies" placeholder="Ej. penicilina, mariscos" />
+                        </div>
+                        <div>
+                            <label>Condiciones médicas</label>
+                            <input id="medical" placeholder="Ej. asma, diabetes" />
+                        </div>
+                    </div>
+
+                    <label style="margin-top:10px">Notas (qué hacer / info extra)</label>
+                    <textarea id="notes" placeholder="Ej. Si estoy inconsciente, llamar a..."></textarea>
+
+                    <div class="sec-title">Moto</div>
+                    <div class="row">
+                        <div>
+                            <label>Marca / Modelo</label>
+                            <input id="bike" placeholder="Ej. CFMOTO 675 SR-R" />
+                        </div>
+                        <div>
+                            <label>Placas</label>
+                            <input id="plate" placeholder="Ej. ABC-12-34" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div>
+                            <label>Color</label>
+                            <input id="color" placeholder="Ej. negro / morado" />
+                        </div>
+                        <div>
+                            <label>Póliza / aseguradora</label>
+                            <input id="policy" placeholder="Ej. Qualitas / #123456" />
+                        </div>
+                    </div>
+
+                    <div class="btns">
+                        <button id="gen">Generar QR</button>
+                        <button class="secondary" id="save">Guardar en este navegador</button>
+                        <button class="secondary" id="load">Cargar guardado</button>
+                        <button class="danger" id="clear">Limpiar</button>
+                    </div>
+
+                    <div class="hint" style="margin-top:10px">
+                        Nota: este prototipo mete los datos en el QR como JSON compacto (offline).
+                        Si lo quieres “pro”, lo pasamos a QR con link + página pública tipo “ICE”.
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR + PREVIEW -->
+            <div class="qrWrap">
+                <div class="card">
+                    <div class="hd">
+                        <div>
+                            <div class="small">Escanéalo con cualquier cámara</div>
+                            <div style="font-weight:750">Emergency QR</div>
+                        </div>
+                        <div class="badge">ICE</div>
+                    </div>
+                    <div class="bd">
+                        <div class="qrBox">
+                            <div id="qrcode"></div>
+                        </div>
+
+                        <div class="kv" style="margin-top:12px">
+                            <div><b>Piloto</b>
+                                <div id="pv_name"><span class="small">—</span></div>
+                            </div>
+                            <div><b>Moto</b>
+                                <div id="pv_bike"><span class="small">—</span></div>
+                            </div>
+                            <div><b>Payload (preview)</b>
+                                <div id="pv_payload" class="small mono">—</div>
+                            </div>
+                        </div>
+
+                        <div class="btns" style="margin-top:12px">
+                            <button class="secondary" id="download">Descargar QR (PNG)</button>
+                            <button class="secondary" id="copy">Copiar payload</button>
+                        </div>
+
+                        <div class="hint" style="margin-top:10px">
+                            Tip: pega el QR en una calca en el casco, tanque o en una tarjeta en la cartera.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+
+        function compactPayload(obj) {
+            // Compacta claves para que el QR quede menos denso
+            // p=persona, m=moto
+            return JSON.stringify({
+                v: 1,
+                p: {
+                    n: obj.name || "",
+                    t: obj.phone || "",
+                    b: obj.blood || "",
+                    e: obj.emg || "",
+                    a: obj.allergies || "",
+                    c: obj.medical || "",
+                    x: obj.notes || ""
+                },
+                m: {
+                    d: obj.bike || "",
+                    l: obj.plate || "",
+                    k: obj.color || "",
+                    s: obj.policy || ""
+                }
+            });
+        }
+
+        function readForm() {
+            return {
+                name: $("name").value.trim(),
+                phone: $("phone").value.trim(),
+                blood: $("blood").value.trim(),
+                emg: $("emg").value.trim(),
+                allergies: $("allergies").value.trim(),
+                medical: $("medical").value.trim(),
+                notes: $("notes").value.trim(),
+                bike: $("bike").value.trim(),
+                plate: $("plate").value.trim(),
+                color: $("color").value.trim(),
+                policy: $("policy").value.trim(),
+            };
+        }
+
+        function setPreview(obj, payload) {
+            $("pv_name").innerHTML = `<span>${obj.name || "—"}</span> <span class="small">${obj.phone ? " · " + obj.phone : ""}</span>`;
+            $("pv_bike").innerHTML = `<span>${obj.bike || "—"}</span> <span class="small">${obj.plate ? " · " + obj.plate : ""}</span>`;
+            $("pv_payload").textContent = payload || "—";
+        }
+
+        function genQR(payload) {
+            const el = $("qrcode");
+            el.innerHTML = "";
+            // QRCode.js usa canvas/img; si el payload es muy largo, sube el tamaño.
+            new QRCode(el, {
+                text: payload,
+                width: 240,
+                height: 240,
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        function persist(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+        function restore(key) {
+            const raw = localStorage.getItem(key);
+            if (!raw) return null;
+            try { return JSON.parse(raw); } catch { return null; }
+        }
+
+        function fillForm(obj) {
+            $("name").value = obj.name || "";
+            $("phone").value = obj.phone || "";
+            $("blood").value = obj.blood || "";
+            $("emg").value = obj.emg || "";
+            $("allergies").value = obj.allergies || "";
+            $("medical").value = obj.medical || "";
+            $("notes").value = obj.notes || "";
+            $("bike").value = obj.bike || "";
+            $("plate").value = obj.plate || "";
+            $("color").value = obj.color || "";
+            $("policy").value = obj.policy || "";
+        }
+
+        function downloadQR() {
+            // QRCode.js suele crear <img> o <canvas> dentro del contenedor
+            const el = $("qrcode");
+            const img = el.querySelector("img");
+            const canvas = el.querySelector("canvas");
+            let dataURL = null;
+
+            if (img && img.src) dataURL = img.src;
+            if (!dataURL && canvas) dataURL = canvas.toDataURL("image/png");
+
+            if (!dataURL) {
+                alert("No se encontró imagen/canvas del QR.");
+                return;
+            }
+
+            const a = document.createElement("a");
+            a.href = dataURL;
+            a.download = "apex_emergency_qr.png";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        function copyPayload() {
+            const text = $("pv_payload").textContent || "";
+            if (!text || text === "—") return;
+            navigator.clipboard.writeText(text).then(() => {
+                // ok
+            }).catch(() => { });
+        }
+
+        // Actions
+        $("gen").addEventListener("click", () => {
+            const obj = readForm();
+            const payload = compactPayload(obj);
+            genQR(payload);
+            setPreview(obj, payload);
+        });
+
+        $("save").addEventListener("click", () => {
+            const obj = readForm();
+            persist("apex_emergency_profile_v1", obj);
+        });
+
+        $("load").addEventListener("click", () => {
+            const obj = restore("apex_emergency_profile_v1");
+            if (!obj) return;
+            fillForm(obj);
+            const payload = compactPayload(obj);
+            genQR(payload);
+            setPreview(obj, payload);
+        });
+
+        $("clear").addEventListener("click", () => {
+            fillForm({});
+            $("qrcode").innerHTML = "";
+            setPreview({}, "");
+        });
+
+        $("download").addEventListener("click", downloadQR);
+        $("copy").addEventListener("click", copyPayload);
+
+        // Auto-generate empty QR placeholder
+        const initPayload = compactPayload(readForm());
+        genQR(initPayload);
+        setPreview(readForm(), initPayload);
+    </script>
+</body>
+
+</html>
