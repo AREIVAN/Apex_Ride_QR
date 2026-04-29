@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #111827;
+  background: #f6f8fb;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 16% -10%, rgba(37, 99, 235, 0.12), transparent 34rem),
+    radial-gradient(circle at 86% 10%, rgba(16, 185, 129, 0.11), transparent 30rem),
+    #f6f8fb;
+}
+
+@layer components {
+  .premium-card {
+    @apply rounded-[1.75rem] border border-apex-border/90 bg-white/85 shadow-soft backdrop-blur;
+  }
+
+  .premium-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-extrabold transition duration-200 ease-premium focus:outline-none focus:ring-4 focus:ring-apex-blue/15 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .input-shell {
+    @apply w-full rounded-2xl border border-apex-border bg-slate-50 px-4 py-3 text-sm text-apex-ink outline-none transition duration-200 ease-premium placeholder:text-slate-400 focus:border-apex-blue/70 focus:bg-white focus:ring-4 focus:ring-apex-blue/10;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+}
