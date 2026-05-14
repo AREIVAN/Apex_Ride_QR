@@ -1,17 +1,945 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#F6F8FB" />
-    <meta
-      name="description"
-      content="Create a scannable emergency safety card and printable QR sticker for motorcycle riders."
-    />
-    <title>Apex Ride Safety Card</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>APEX EMERGENCY QR</title>
+
+    <!-- QR -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <!-- Compresión para link corto -->
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+    <!-- Exportar sticker a PNG -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #070A10;
+            --panel: #0B1020;
+            --panel2: #0C142A;
+            --stroke: rgba(122, 63, 255, .55);
+            --neon: #7A3FFF;
+            --neon2: #2FE6FF;
+            --hot: #FF2E88;
+            --text: #EAF0FF;
+            --muted: rgba(234, 240, 255, .65);
+            --r: 18px;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+            background: radial-gradient(1200px 600px at 20% 0%, rgba(122, 63, 255, .18), transparent 60%),
+                radial-gradient(900px 600px at 80% 10%, rgba(47, 230, 255, .10), transparent 55%),
+                var(--bg);
+            color: var(--text);
+        }
+
+        .wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 22px
+        }
+
+        .topbar {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border: 1px solid rgba(122, 63, 255, .35);
+            background: linear-gradient(180deg, rgba(11, 16, 32, .9), rgba(11, 16, 32, .6));
+            border-radius: calc(var(--r) + 4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(122, 63, 255, .95), rgba(47, 230, 255, .85));
+            box-shadow: 0 0 0 1px rgba(234, 240, 255, .12), 0 10px 25px rgba(122, 63, 255, .25);
+        }
+
+        .brand h1 {
+            font-size: 16px;
+            margin: 0;
+            letter-spacing: .8px
+        }
+
+        .brand p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .badge {
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(47, 230, 255, .35);
+            color: var(--neon2);
+            background: rgba(47, 230, 255, .06);
+            white-space: nowrap;
+        }
+
+        .grid {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: 1.15fr .85fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 920px) {
+            .grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .card {
+            border: 1px solid rgba(122, 63, 255, .35);
+            background: linear-gradient(180deg, rgba(12, 20, 42, .75), rgba(11, 16, 32, .6));
+            border-radius: calc(var(--r) + 6px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
+            overflow: hidden;
+        }
+
+        .card .hd {
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            border-bottom: 1px solid rgba(122, 63, 255, .22);
+        }
+
+        .card .bd {
+            padding: 16px
+        }
+
+        .sec-title {
+            margin: 10px 0 8px;
+            font-size: 12px;
+            letter-spacing: 1px;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media (max-width: 520px) {
+            .row {
+                grid-template-columns: 1fr
+            }
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin: 0 0 6px
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(234, 240, 255, .10);
+            background: rgba(7, 10, 16, .55);
+            color: var(--text);
+            outline: none;
+        }
+
+        textarea {
+            min-height: 86px;
+            resize: vertical
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: rgba(47, 230, 255, .45);
+            box-shadow: 0 0 0 3px rgba(47, 230, 255, .10);
+        }
+
+        .btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px
+        }
+
+        button {
+            cursor: pointer;
+            border: 1px solid rgba(122, 63, 255, .45);
+            background: linear-gradient(135deg, rgba(122, 63, 255, .92), rgba(47, 230, 255, .65));
+            color: var(--text);
+            padding: 11px 14px;
+            border-radius: 16px;
+            font-weight: 650;
+            letter-spacing: .2px;
+            box-shadow: 0 12px 28px rgba(122, 63, 255, .18);
+        }
+
+        button.secondary {
+            background: rgba(234, 240, 255, .04);
+            border: 1px solid rgba(234, 240, 255, .12);
+            box-shadow: none;
+            color: var(--text);
+        }
+
+        button.danger {
+            background: rgba(255, 46, 136, .12);
+            border: 1px solid rgba(255, 46, 136, .35);
+            box-shadow: none;
+            color: var(--hot);
+        }
+
+        .qrWrap {
+            display: grid;
+            gap: 12px;
+        }
+
+        .qrBox {
+            padding: 16px;
+            display: grid;
+            place-items: center;
+            border-radius: calc(var(--r) + 6px);
+            border: 1px solid rgba(47, 230, 255, .28);
+            background: radial-gradient(500px 300px at 50% 0%, rgba(47, 230, 255, .10), transparent 55%),
+                rgba(7, 10, 16, .35);
+            min-height: 320px;
+        }
+
+        /* Sticker imprimible */
+        .sticker {
+            display: grid;
+            place-items: center;
+            gap: 10px;
+            padding: 12px 12px 14px;
+            border-radius: 18px;
+            background: #fff;
+            /* blanco para impresión */
+            color: #000;
+            min-width: 280px;
+        }
+
+        #qrcode {
+            padding: 10px;
+            background: #fff;
+            border-radius: 16px
+        }
+
+        .stickerLabel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 950;
+            letter-spacing: 2px;
+            font-size: 18px;
+            text-transform: uppercase;
+        }
+
+        .stickerIcon {
+            font-size: 18px;
+            line-height: 1
+        }
+
+        .stickerName {
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+        }
+
+        .stickerSub {
+            font-size: 12px;
+            opacity: .75
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.35
+        }
+
+        .kv {
+            display: grid;
+            gap: 10px;
+            padding: 14px 16px;
+            border-radius: calc(var(--r) + 6px);
+            border: 1px solid rgba(122, 63, 255, .22);
+            background: rgba(7, 10, 16, .35);
+        }
+
+        .kv b {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600
+        }
+
+        .small {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        /* Viewer (modo online) */
+        .viewer-title {
+            font-weight: 800;
+            font-size: 18px;
+            margin: 0 0 6px
+        }
+
+        .viewer-sub {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .pill {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(234, 240, 255, .12);
+            background: rgba(7, 10, 16, .35);
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px
+        }
+
+        .divider {
+            height: 1px;
+            background: rgba(122, 63, 255, .22);
+            margin: 12px 0
+        }
+
+        /* Impresión: imprime el sticker centrado */
+        @media print {
+            body {
+                background: #fff !important;
+            }
+
+            .topbar,
+            #creator .card:first-child,
+            .kv,
+            .btns,
+            .hint,
+            .badge,
+            .pills,
+            .divider,
+            #viewer {
+                display: none !important;
+            }
+
+            .grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .qrWrap .card {
+                border: none !important;
+                box-shadow: none !important;
+                background: #fff !important;
+            }
+
+            .qrBox {
+                border: none !important;
+                background: #fff !important;
+                min-height: auto !important;
+                padding: 0 !important;
+            }
+
+            .sticker {
+                margin: 0 auto !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="topbar">
+            <div class="brand">
+                <div class="logo"></div>
+                <div>
+                    <h1>APEX EMERGENCY QR</h1>
+                    <p>QR offline (vCard) + link online (página Emergencia)</p>
+                </div>
+            </div>
+            <div class="badge" id="modeBadge">CREADOR</div>
+        </div>
+
+        <!-- CREADOR -->
+        <div id="creator" class="grid">
+            <div class="card">
+                <div class="hd">
+                    <div>
+                        <div class="small">Datos para el QR</div>
+                        <div style="font-weight:750">Piloto & Moto</div>
+                    </div>
+                    <div class="badge">vCard offline + link</div>
+                </div>
+
+                <div class="bd">
+                    <div class="sec-title">Link de la página de emergencia</div>
+                    <label>Base URL (donde vas a alojar esta página)</label>
+                    <input id="baseUrl" placeholder="Ej. https://tudominio.com/ice/" />
+
+                    <div class="sec-title">Persona</div>
+                    <div class="row">
+                        <div>
+                            <label>Alias (recomendado)</label>
+                            <input id="alias" placeholder="Ej. AREIVAN" />
+                        </div>
+                        <div>
+                            <label>Nombre</label>
+                            <input id="name" placeholder="Ej. Areivan Angeles" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div>
+                            <label>Teléfono</label>
+                            <input id="phone" placeholder="Ej. +52 55 ..." />
+                        </div>
+                        <div>
+                            <label>Contacto de emergencia</label>
+                            <input id="emg" placeholder="Nombre + teléfono" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div>
+                            <label>Tipo de sangre</label>
+                            <select id="blood">
+                                <option value="">(opcional)</option>
+                                <option>O+</option>
+                                <option>O-</option>
+                                <option>A+</option>
+                                <option>A-</option>
+                                <option>B+</option>
+                                <option>B-</option>
+                                <option>AB+</option>
+                                <option>AB-</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Alergias</label>
+                            <input id="allergies" placeholder="Ej. penicilina, mariscos" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div>
+                            <label>Condiciones médicas</label>
+                            <input id="medical" placeholder="Ej. asma, diabetes" />
+                        </div>
+                        <div>
+                            <label>Póliza / aseguradora</label>
+                            <input id="policy" placeholder="Ej. Qualitas / #123456" />
+                        </div>
+                    </div>
+
+                    <label style="margin-top:10px">Notas (qué hacer / info extra)</label>
+                    <textarea id="notes" placeholder="Ej. Si estoy inconsciente, llamar a..."></textarea>
+
+                    <div class="sec-title">Moto</div>
+                    <div class="row">
+                        <div>
+                            <label>Marca / Modelo</label>
+                            <input id="bike" placeholder="Ej. CFMOTO 675 SR-R" />
+                        </div>
+                        <div>
+                            <label>Placas</label>
+                            <input id="plate" placeholder="Ej. ABC-12-34" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div>
+                            <label>Color</label>
+                            <input id="color" placeholder="Ej. negro / morado" />
+                        </div>
+                        <div>
+                            <label>Extra (opcional)</label>
+                            <input id="extra" placeholder="Ej. VIN, seguro, etc. (si lo necesitas)" />
+                        </div>
+                    </div>
+
+                    <div class="btns">
+                        <button id="gen">Generar QR (vCard + link)</button>
+                        <button class="secondary" id="save">Guardar en este navegador</button>
+                        <button class="secondary" id="load">Cargar guardado</button>
+                        <button class="danger" id="clear">Limpiar</button>
+                    </div>
+
+                    <div class="hint" style="margin-top:10px">
+                        El QR funciona sin internet (vCard). Si hay internet, el link abre la página de emergencia con
+                        esta misma estética.
+                    </div>
+                </div>
+            </div>
+
+            <div class="qrWrap">
+                <div class="card">
+                    <div class="hd">
+                        <div>
+                            <div class="small">Sticker imprimible</div>
+                            <div style="font-weight:750">Emergency QR</div>
+                        </div>
+                        <div class="badge" id="status">SIN CONFIGURAR</div>
+                    </div>
+                    <div class="bd">
+                        <div class="qrBox">
+                            <div class="sticker" id="sticker">
+                                <div id="qrcode"></div>
+
+                                <div class="stickerLabel">
+                                    <span class="stickerIcon">⚠️</span>
+                                    <span>EMERGENCIA</span>
+                                </div>
+
+                                <div class="stickerName" id="stickerName">PILOTO: —</div>
+                                <div class="stickerSub">Escanea para ver datos</div>
+                            </div>
+                        </div>
+
+                        <div class="kv" style="margin-top:12px">
+                            <div><b>Piloto</b>
+                                <div id="pv_name"><span class="small">SIN CONFIGURAR</span></div>
+                            </div>
+                            <div><b>Moto</b>
+                                <div id="pv_bike"><span class="small">—</span></div>
+                            </div>
+                            <div><b>Link online</b>
+                                <div id="pv_link" class="small mono">—</div>
+                            </div>
+                            <div><b>vCard (preview)</b>
+                                <div id="pv_payload" class="small mono">—</div>
+                            </div>
+                        </div>
+
+                        <div class="btns" style="margin-top:12px">
+                            <button class="secondary" id="download">Descargar sticker (PNG)</button>
+                            <button class="secondary" id="print">Imprimir sticker</button>
+                            <button class="secondary" id="copyLink">Copiar link</button>
+                            <button class="secondary" id="copyVcard">Copiar vCard</button>
+                        </div>
+
+                        <div class="hint" style="margin-top:10px">
+                            Recomendación: imprime y plastifica o haz calca para casco/tanque.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISOR (cuando abres /#e=...) -->
+        <div id="viewer" style="display:none; margin-top:18px;">
+            <div class="card">
+                <div class="hd">
+                    <div>
+                        <div class="small">EMERGENCIA</div>
+                        <div style="font-weight:750">Emergency Info</div>
+                    </div>
+                    <div class="badge">VISTA ONLINE</div>
+                </div>
+                <div class="bd">
+                    <p class="viewer-title" id="v_name">SIN DATOS</p>
+                    <p class="viewer-sub" id="v_sub">—</p>
+
+                    <div class="pills">
+                        <a class="pill" id="btnCall" href="#">📞 Llamar</a>
+                        <a class="pill" id="btnWhats" href="#">💬 WhatsApp</a>
+                        <a class="pill" id="btnCopy" href="#">📋 Copiar resumen</a>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="kv">
+                        <div><b>Tipo de sangre</b>
+                            <div id="v_blood"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Alergias</b>
+                            <div id="v_all"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Condiciones</b>
+                            <div id="v_med"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Contacto de emergencia</b>
+                            <div id="v_emg"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Moto</b>
+                            <div id="v_bike"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Placas</b>
+                            <div id="v_plate"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Póliza</b>
+                            <div id="v_policy"><span class="small">—</span></div>
+                        </div>
+                        <div><b>Notas</b>
+                            <div id="v_notes"><span class="small">—</span></div>
+                        </div>
+                    </div>
+
+                    <div class="hint" style="margin-top:12px">
+                        Esta vista viene del link dentro del QR. El QR por sí solo ya trae los datos (vCard) para uso
+                        offline.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+
+        function defaultBaseUrl() {
+            const u = new URL(window.location.href);
+            u.hash = "";
+            u.search = "";
+            return u.toString();
+        }
+
+        function readForm() {
+            return {
+                baseUrl: $("baseUrl").value.trim(),
+                alias: $("alias").value.trim(),
+                name: $("name").value.trim(),
+                phone: $("phone").value.trim(),
+                emg: $("emg").value.trim(),
+                blood: $("blood").value.trim(),
+                allergies: $("allergies").value.trim(),
+                medical: $("medical").value.trim(),
+                notes: $("notes").value.trim(),
+                bike: $("bike").value.trim(),
+                plate: $("plate").value.trim(),
+                color: $("color").value.trim(),
+                policy: $("policy").value.trim(),
+                extra: $("extra").value.trim(),
+            };
+        }
+
+        function fillForm(obj) {
+            $("baseUrl").value = obj.baseUrl || defaultBaseUrl();
+            $("alias").value = obj.alias || "";
+            $("name").value = obj.name || "";
+            $("phone").value = obj.phone || "";
+            $("emg").value = obj.emg || "";
+            $("blood").value = obj.blood || "";
+            $("allergies").value = obj.allergies || "";
+            $("medical").value = obj.medical || "";
+            $("notes").value = obj.notes || "";
+            $("bike").value = obj.bike || "";
+            $("plate").value = obj.plate || "";
+            $("color").value = obj.color || "";
+            $("policy").value = obj.policy || "";
+            $("extra").value = obj.extra || "";
+        }
+
+        function minimalObj(obj) {
+            // Claves cortas para comprimir
+            return {
+                v: 1,
+                p: {
+                    u: obj.alias || "", // alias
+                    n: obj.name || "",
+                    t: obj.phone || "",
+                    b: obj.blood || "",
+                    e: obj.emg || "",
+                    a: obj.allergies || "",
+                    c: obj.medical || "",
+                    x: obj.notes || ""
+                },
+                m: {
+                    d: obj.bike || "",
+                    l: obj.plate || "",
+                    k: obj.color || "",
+                    s: obj.policy || "",
+                    z: obj.extra || ""
+                }
+            };
+        }
+
+        function encodeForLink(obj) {
+            const json = JSON.stringify(minimalObj(obj));
+            return LZString.compressToEncodedURIComponent(json);
+        }
+
+        function decodeFromLink(encoded) {
+            const json = LZString.decompressFromEncodedURIComponent(encoded);
+            if (!json) return null;
+            try { return JSON.parse(json); } catch { return null; }
+        }
+
+        function buildOnlineLink(obj) {
+            const base = (obj.baseUrl || defaultBaseUrl()).trim();
+            const encoded = encodeForLink(obj);
+            return `${base.replace(/#.*$/, "").replace(/\?.*$/, "")}#e=${encoded}`;
+        }
+
+        function buildVCard(obj, link) {
+            // Preferir alias si existe
+            const fnValue = (obj.alias || obj.name || "SIN CONFIGURAR").replace(/\n/g, " ");
+            const tel = (obj.phone || "").replace(/\n/g, " ");
+
+            // Nota compacta para no inflar el QR
+            const parts = [
+                "ICE",
+                obj.blood ? `Sangre:${obj.blood}` : "",
+                obj.allergies ? `Alergias:${obj.allergies}` : "",
+                obj.medical ? `Cond:${obj.medical}` : "",
+                obj.emg ? `Contacto:${obj.emg}` : "",
+                obj.bike ? `Moto:${obj.bike}` : "",
+                obj.plate ? `Placas:${obj.plate}` : "",
+                obj.color ? `Color:${obj.color}` : "",
+                obj.policy ? `Poliza:${obj.policy}` : "",
+                obj.extra ? `Extra:${obj.extra}` : "",
+                obj.notes ? `Notas:${obj.notes}` : "",
+                link ? `Link:${link}` : ""
+            ].filter(Boolean);
+
+            // vCard 3.0 compatible
+            let v = "";
+            v += "BEGIN:VCARD\n";
+            v += "VERSION:3.0\n";
+            v += `FN:${fnValue}\n`;
+            if (tel) v += `TEL;TYPE=CELL:${tel}\n`;
+            v += `NOTE:${parts.join(" | ")}\n`;
+            v += "END:VCARD";
+            return v;
+        }
+
+        function genQR(text) {
+            const el = $("qrcode");
+            el.innerHTML = "";
+            new QRCode(el, {
+                text,
+                width: 240,
+                height: 240,
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        function updateStickerName(obj) {
+            const who = (obj.alias || obj.name || "").trim();
+            const label = who ? `PILOTO: ${who}` : "PILOTO: —";
+            const el = $("stickerName");
+            if (el) el.textContent = label;
+        }
+
+        function setPreview(obj, link, vcard) {
+            const who = (obj.alias || obj.name || "").trim();
+
+            $("pv_name").innerHTML = who
+                ? `<span>${who}</span> <span class="small">${obj.phone ? " · " + obj.phone : ""}</span>`
+                : `<span class="small">SIN CONFIGURAR</span>`;
+
+            $("pv_bike").innerHTML = obj.bike
+                ? `<span>${obj.bike}</span> <span class="small">${obj.plate ? " · " + obj.plate : ""}</span>`
+                : `<span class="small">—</span>`;
+
+            $("pv_link").textContent = link || "—";
+            $("pv_payload").textContent = vcard || "—";
+
+            const ready = !!(who || obj.phone || obj.emg || obj.bike || obj.plate);
+            $("status").textContent = ready ? "LISTO" : "SIN CONFIGURAR";
+        }
+
+        async function downloadStickerPNG() {
+            const sticker = $("sticker");
+            if (!sticker) { alert("No se encontró el sticker."); return; }
+
+            const canvas = await html2canvas(sticker, {
+                backgroundColor: "#ffffff",
+                scale: 3
+            });
+
+            const dataURL = canvas.toDataURL("image/png");
+            const a = document.createElement("a");
+            a.href = dataURL;
+            a.download = "apex_emergencia_sticker.png";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        function persist(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+        function restore(key) {
+            const raw = localStorage.getItem(key);
+            if (!raw) return null;
+            try { return JSON.parse(raw); } catch { return null; }
+        }
+
+        function copyText(text) {
+            if (!text || text === "—") return;
+            navigator.clipboard.writeText(text).catch(() => { });
+        }
+
+        function demoQR() {
+            const demoText =
+                "APEX EMERGENCY QR\n" +
+                "SIN CONFIGURAR\n" +
+                "Tip: llena tus datos y presiona 'Generar QR'.\n" +
+                "ICE: In Case of Emergency";
+            genQR(demoText);
+            $("pv_name").innerHTML = `<span class="small">SIN CONFIGURAR</span>`;
+            $("pv_bike").innerHTML = `<span class="small">—</span>`;
+            $("pv_link").textContent = "—";
+            $("pv_payload").textContent = demoText;
+            $("status").textContent = "SIN CONFIGURAR";
+            updateStickerName({ alias: "", name: "" });
+        }
+
+        // Viewer render (modo online)
+        function renderViewer(data) {
+            const p = data.p || {};
+            const m = data.m || {};
+            const who = (p.u || p.n || "SIN DATOS").trim();
+            const phone = (p.t || "").trim();
+
+            const sub = [
+                phone || "",
+                m.d || "",
+                m.l || ""
+            ].filter(Boolean).join(" · ");
+
+            $("v_name").textContent = who || "SIN DATOS";
+            $("v_sub").textContent = sub || "—";
+
+            $("v_blood").textContent = p.b || "—";
+            $("v_all").textContent = p.a || "—";
+            $("v_med").textContent = p.c || "—";
+            $("v_emg").textContent = p.e || "—";
+            $("v_bike").textContent = m.d || "—";
+            $("v_plate").textContent = m.l || "—";
+            $("v_policy").textContent = m.s || "—";
+            $("v_notes").textContent = p.x || "—";
+
+            $("btnCall").href = phone ? `tel:${phone}` : "#";
+            $("btnWhats").href = phone ? `https://wa.me/${phone.replace(/[^\d]/g, "")}` : "#";
+
+            const summary =
+                `EMERGENCIA | ${who}\n` +
+                (phone ? `Tel: ${phone}\n` : "") +
+                (p.b ? `Sangre: ${p.b}\n` : "") +
+                (p.a ? `Alergias: ${p.a}\n` : "") +
+                (p.c ? `Condiciones: ${p.c}\n` : "") +
+                (p.e ? `Contacto: ${p.e}\n` : "") +
+                (m.d ? `Moto: ${m.d}\n` : "") +
+                (m.l ? `Placas: ${m.l}\n` : "") +
+                (m.s ? `Póliza: ${m.s}\n` : "") +
+                (p.x ? `Notas: ${p.x}\n` : "");
+
+            $("btnCopy").onclick = (e) => { e.preventDefault(); copyText(summary); };
+
+            $("creator").style.display = "none";
+            $("viewer").style.display = "block";
+            $("modeBadge").textContent = "VISTA EMERGENCIA";
+        }
+
+        function init() {
+            $("baseUrl").value = defaultBaseUrl();
+
+            const hash = window.location.hash || "";
+            const match = hash.match(/#e=([^&]+)/);
+            if (match && match[1]) {
+                const decoded = decodeFromLink(match[1]);
+                if (decoded) {
+                    renderViewer(decoded);
+                    return;
+                }
+            }
+
+            $("creator").style.display = "grid";
+            $("viewer").style.display = "none";
+            $("modeBadge").textContent = "CREADOR";
+            demoQR();
+
+            // auto-cargar si hay perfil guardado
+            const obj = restore("apex_emergency_profile_v3");
+            if (obj) {
+                fillForm({ ...obj, baseUrl: obj.baseUrl || defaultBaseUrl() });
+                const link = buildOnlineLink(readForm());
+                const vcard = buildVCard(readForm(), link);
+                genQR(vcard);
+                setPreview(readForm(), link, vcard);
+                updateStickerName(readForm());
+            }
+        }
+
+        // Actions
+        $("gen").addEventListener("click", () => {
+            const obj = readForm();
+            const link = buildOnlineLink(obj);
+            const vcard = buildVCard(obj, link);
+
+            genQR(vcard);
+            setPreview(obj, link, vcard);
+            updateStickerName(obj);
+
+            persist("apex_emergency_profile_v3", obj);
+        });
+
+        $("save").addEventListener("click", () => {
+            persist("apex_emergency_profile_v3", readForm());
+        });
+
+        $("load").addEventListener("click", () => {
+            const obj = restore("apex_emergency_profile_v3");
+            if (!obj) return;
+            fillForm({ ...obj, baseUrl: obj.baseUrl || defaultBaseUrl() });
+            const fresh = readForm();
+            const link = buildOnlineLink(fresh);
+            const vcard = buildVCard(fresh, link);
+            genQR(vcard);
+            setPreview(fresh, link, vcard);
+            updateStickerName(fresh);
+        });
+
+        $("clear").addEventListener("click", () => {
+            fillForm({ baseUrl: defaultBaseUrl() });
+            demoQR();
+            persist("apex_emergency_profile_v3", readForm());
+        });
+
+        $("download").addEventListener("click", downloadStickerPNG);
+        $("print").addEventListener("click", () => window.print());
+        $("copyLink").addEventListener("click", () => copyText($("pv_link").textContent));
+        $("copyVcard").addEventListener("click", () => copyText($("pv_payload").textContent));
+
+        init();
+    </script>
+</body>
+
 </html>

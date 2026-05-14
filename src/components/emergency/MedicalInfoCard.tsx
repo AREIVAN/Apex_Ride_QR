@@ -1,0 +1,4 @@
+import { Card } from '@/components/shared/Card';
+import type { EmergencyProfile } from '@/lib/emergency/types';
+function Row({ l, v, hot }: { l: string; v?: string; hot?: boolean }) { return <div className="rounded-2xl border border-white/10 bg-white/[.05] p-4"><dt className="text-xs font-black uppercase tracking-[.14em] text-apex-muted">{l}</dt><dd className={`mt-1 text-lg font-black ${hot ? 'text-red-100' : 'text-white'}`}>{v || '—'}</dd></div>; }
+export function MedicalInfoCard({ profile }: { profile: EmergencyProfile }) { return <Card className="p-5"><h2 className="text-xl font-black">Información médica</h2><dl className="mt-4 grid gap-3"><Row l="Tipo de sangre" v={profile.blood} hot /><Row l="Alergias" v={profile.allergies} hot /><Row l="Condiciones" v={profile.medical} /><Row l="Notas" v={profile.notes} /></dl></Card>; }

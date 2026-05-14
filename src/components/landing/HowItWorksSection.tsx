@@ -1,0 +1,3 @@
+import { SectionHeader } from '@/components/shared/SectionHeader';
+const steps = ['Captura tus datos.', 'Genera tu QR.', 'Descarga o imprime tu sticker.', 'En emergencia, cualquier persona escanea y ve la información.'];
+export function HowItWorksSection() { return <section id="como-funciona" className="apex-container py-20"><SectionHeader eyebrow="Flujo" title="Cuatro pasos. Cero backend. Cero humo." /> <div className="mt-10 grid gap-4 md:grid-cols-4">{steps.map((s, i) => <div key={s} className="glass-card rounded-4xl p-6"><span className="text-5xl font-black text-apex-cyan/30">0{i+1}</span><p className="mt-6 text-lg font-black">{s}</p></div>)}</div></section>; }

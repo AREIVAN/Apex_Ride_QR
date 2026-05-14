@@ -1,0 +1,1 @@
+export function SiteFooter() { return <footer className="no-print border-t border-white/10"><div className="apex-container flex flex-col gap-2 py-9 text-sm text-apex-muted sm:flex-row sm:items-center sm:justify-between"><strong className="text-white">APEX Emergency QR</strong><span>Datos locales. Sin login. Sin promesas médicas ni legales.</span></div></footer>; }

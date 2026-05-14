@@ -1,0 +1,1 @@
+export { MedicalSection } from './FormFields';

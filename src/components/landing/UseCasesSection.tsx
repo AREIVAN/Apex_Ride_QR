@@ -1,0 +1,2 @@
+const uses = ['Casco', 'Moto', 'Cartera', 'Chamarras', 'Clubs de rodada'];
+export function UseCasesSection() { return <section className="apex-container py-20"><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{uses.map((u) => <div key={u} className="rounded-4xl border border-white/10 bg-gradient-to-br from-white/10 to-white/[.03] p-7 text-center text-xl font-black shadow-card">{u}</div>)}</div></section>; }

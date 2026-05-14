@@ -1,34 +1,35 @@
 import type { Config } from 'tailwindcss';
 
-export default {
-  content: ['./index.html', './src/**/*.{ts,tsx}'],
+const config: Config = {
+  content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
         apex: {
-          bg: '#F6F8FB',
-          surface: '#FFFFFF',
-          ink: '#111827',
-          muted: '#6B7280',
-          border: '#E5E7EB',
-          blue: '#2563EB',
-          blueDark: '#1D4ED8',
-          safety: '#10B981',
-          emergency: '#EF4444',
-          graphite: '#172033',
+          void: '#050711',
+          panel: '#0B1020',
+          panel2: '#101A33',
+          line: 'rgba(226,232,255,.14)',
+          text: '#EEF4FF',
+          muted: '#9AA8C7',
+          violet: '#8B5CFF',
+          cyan: '#2FE6FF',
+          danger: '#FF315A',
+          amber: '#FFB020',
         },
       },
       boxShadow: {
-        premium: '0 24px 70px rgba(17, 24, 39, 0.09)',
-        soft: '0 12px 34px rgba(17, 24, 39, 0.07)',
+        glow: '0 0 40px rgba(139,92,255,.28)',
+        cyan: '0 0 36px rgba(47,230,255,.18)',
+        card: '0 24px 80px rgba(0,0,0,.42)',
       },
-      borderRadius: {
-        '4xl': '2rem',
-      },
+      borderRadius: { '4xl': '2rem' },
       transitionTimingFunction: {
         premium: 'cubic-bezier(0.22, 1, 0.36, 1)',
       },
     },
   },
   plugins: [],
-} satisfies Config;
+};
+
+export default config;

@@ -1,0 +1,13 @@
+:root {
+  --apex-bg: #050711;
+  --apex-panel: #0b1020;
+  --apex-panel-2: #101a33;
+  --apex-line: rgba(226, 232, 255, .14);
+  --apex-text: #eef4ff;
+  --apex-muted: #9aa8c7;
+  --apex-violet: #8b5cff;
+  --apex-cyan: #2fe6ff;
+  --apex-danger: #ff315a;
+  --apex-amber: #ffb020;
+  --ease-premium: cubic-bezier(.22, 1, .36, 1);
+}
